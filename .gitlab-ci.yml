@@ -1,0 +1,23 @@
+variables:
+  BASE_URL: $BASE_URL
+
+
+stages:
+  - test
+
+
+run_playwright_tests:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.39.0-jammy
+  script:
+    - npm ci
+    - npx playwright test
+    - echo "https://$CI_PROJECT_NAMESPACE.gitlab.io/-/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/playwright-report/index.html" # print the URL to view the results
+  allow_failure: true
+
+
+artifacts:
+  when: always
+  paths:
+    - playwright-report
+  expire_in: 2 days
