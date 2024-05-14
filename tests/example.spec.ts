@@ -7,8 +7,6 @@ dotenv.config({ path: path.resolve(__dirname, "..", "my.env") });
 
 test("has title", async ({ page }) => {
   await page.goto(process.env.BASE_URL as string);
-  console.log('BASE URL:', process.env.BASE_URL);
-
 
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/Playwright/);

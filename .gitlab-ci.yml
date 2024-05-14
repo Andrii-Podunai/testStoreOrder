@@ -1,5 +1,5 @@
 variables:
-  BASE_URL: $BASE_URL
+  BASE_URL: "https://playwright.dev/"
 
 
 stages:
