@@ -1,7 +1,7 @@
 {
-  "name": "opd-autotests",
+  "name": "test-autotests",
   "version": "1.0.0",
-  "description": "OPD-autotests repository",
+  "description": "test-autotests",
   "main": "index.js",
   "scripts": {
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore",
