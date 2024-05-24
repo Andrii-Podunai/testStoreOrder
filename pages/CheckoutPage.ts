@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export class CheckoutPage {
   readonly page: Page;
@@ -7,8 +7,8 @@ export class CheckoutPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.orderSummary = page.locator('.order-summary');
-    this.checkoutButton = page.locator('button:has-text("Checkout")');
+    this.orderSummary = page.locator('//*[@id="orderSummary"]');
+    this.checkoutButton = page.locator('//*[@id="checkout"]');
   }
 
   async verifyOrderSummary() {
@@ -21,24 +21,39 @@ export class CheckoutPage {
     await this.checkoutButton.click();
   }
 
-  async verifySections(sections: string[]) {
+  async verifySections(sections: string[]): Promise<boolean> {
     for (const section of sections) {
       const sectionLocator = this.page.locator(`text=${section}`).first();
       if (!(await sectionLocator.isVisible())) {
-        throw new Error(`Section ${section} is not visible`);
+        return false;
       }
     }
+    return true;
   }
 
   async verifyCompleteOrderButton() {
-    const completeOrderButton = this.page.locator('button:has-text("Complete Order")');
+    const completeOrderButton = this.page.locator('//*[@id="btnCompleteOrder"]');
     if (!(await completeOrderButton.isVisible()) || !(await completeOrderButton.isDisabled())) {
-      throw new Error('Complete Order button is either not visible or not disabled');
+      return false;
     }
+    return true;
+  }
+  
+  async verifyIpAddress(ipAddress: string): Promise<boolean> {
+    const ipAddressLocators = this.page.locator(`//table//td[contains(text(), "${ipAddress}")]`);
+    const count = await ipAddressLocators.count();
+    for (let i = 0; i < count; i++) {
+      const ipText = await this.trimTextContent(ipAddressLocators.nth(i));
+      if (ipText === ipAddress) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public async trimTextContent(locator: Locator): Promise<string> {
     const textContent = await locator.textContent();
     return textContent ? textContent.trim() : '';
   }
+  
 }

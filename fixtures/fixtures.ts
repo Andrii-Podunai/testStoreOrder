@@ -1,7 +1,7 @@
-import { test as base, expect } from '@playwright/test';
-import { HomePage } from '../pages/HomePage';
-import { ProductPage } from '../pages/ProductPage';
-import { CheckoutPage } from '../pages/CheckoutPage';
+import { test as base, expect } from "@playwright/test";
+import { HomePage } from "../pages/HomePage";
+import { ProductPage } from "../pages/ProductPage";
+import { CheckoutPage } from "../pages/CheckoutPage";
 
 // Define the fixtures
 type MyFixtures = {

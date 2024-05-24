@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/fixtures';
-import { summeryPrice } from '../helper/priceHelper';
+import { summaryPrice } from '../helper/priceHelper';
 
 test.describe('cPanel Store Order Flow', () => {
   test('should order a product and proceed to checkout', async ({ homePage, productPage, checkoutPage, page }) => {
@@ -15,42 +15,48 @@ test.describe('cPanel Store Order Flow', () => {
     await productPage.selectAddon();
 
     const addonName = await productPage.getAddonName();
-    const cleanAddonPrice = await productPage.getAddonPrice();
-    const sum = summeryPrice(orderPrice, cleanAddonPrice);
+    const addonPrice = await productPage.getAddonPrice();
+    const sum = summaryPrice(orderPrice, addonPrice);
 
-    await page.locator('.summary-totals .clearfix').nth(1).waitFor({ state: 'visible' });
+    await productPage.waitForSummaryVisible();
     const updatedSummaryCount = await productPage.getUpdatedSummaryCount();
     expect(updatedSummaryCount).toBeGreaterThan(initialSummaryCount);
 
     await productPage.continueToReview();
     const currentPrice = await productPage.getCurrentPrice() ?? 0;
-    const currentName = await productPage.trimTextContent(page.locator('//*[@class="item-title"]').first());
+    const currentName = await productPage.getItemTitleText(0);
     expect(currentPrice).toEqual(parseFloat(sum.toFixed(2)));
     expect(currentName).toContain(orderName);
 
-    const currentAddonName = await productPage.trimTextContent(page.locator('//*[@class="item-title"]').nth(1));
+    const currentAddonName = await productPage.getItemTitleText(1);
     expect(currentAddonName).toContain(addonName);
+
+    const duTodayProductPrice = await productPage.getPriceFromClassByIndex(0)?? 0;
+    const duTodayAddonPrice = await productPage.getPriceFromClassByIndex(2) ?? 0;
 
     await productPage.continueToCheckout();
 
-    // Verify the license name
-    const licenseName = await productPage.trimTextContent(page.locator('//table//td[contains(text(), "cPanel Solo® Cloud (1 Account)")]'));
+    const licenseName = await productPage.getLicenseName('cPanel Solo® Cloud (1 Account)');
     expect(licenseName).toBe(orderName);
 
-    const licenseAddonName = await productPage.trimTextContent(page.locator('//table//td[contains(text(), "Monthly CloudLinux")]'));
+    const licenseAddonName = await productPage.getLicenseName('Monthly CloudLinux');
     expect(licenseAddonName).toBe(addonName);
 
-    // Verify the IP address
-    const displayedIpAddress = await productPage.trimTextContent(page.locator(`//table//td[contains(text(), "${ipAddress}")]`).first());
-    expect(displayedIpAddress).toBe(ipAddress);
+    const isIpAddressCorrect = await checkoutPage.verifyIpAddress(ipAddress);
+    expect(isIpAddressCorrect).toBe(true);
 
-    const displayedPrice = await productPage.getCheckoutProductPrice();
+    const displayedPrice = await productPage.getCheckoutPrice('43.49');
     expect(displayedPrice).toEqual(parseFloat(sum.toFixed(2)));
 
-    const displayedAddonPrice = await productPage.getCheckoutAddonPrice();
-    expect(displayedAddonPrice).toEqual(cleanAddonPrice);
+    const displayedAddonPrice = await productPage.getCheckoutPrice('26.00');
+    expect(displayedAddonPrice).toEqual(addonPrice);
 
-    // Verify that the 'Personal Information', 'Billing Address', 'Account Security', 'Terms & Conditions' and 'Payment Details' sections are visible
+    const currentDuTodayProductPrice = await productPage.getPriceByText(duTodayProductPrice);
+    const currentDuTodayAddonPrice = await productPage.getPriceByText(duTodayAddonPrice);
+    
+    expect(currentDuTodayProductPrice).toBe(duTodayProductPrice);
+    expect(currentDuTodayAddonPrice).toBe(duTodayAddonPrice);
+
     const sections = [
       'Personal Information',
       'Billing Address',
@@ -59,8 +65,11 @@ test.describe('cPanel Store Order Flow', () => {
       'Payment Details'
     ];
 
-    await checkoutPage.verifySections(sections);
+    const areSectionsVisible = await checkoutPage.verifySections(sections);
+    expect(areSectionsVisible).toBe(true);
+    
+    const areButtonVisible = await checkoutPage.verifyCompleteOrderButton();
+    expect(areButtonVisible).toBe(true);
 
-    await checkoutPage.verifyCompleteOrderButton();
   });
 });
